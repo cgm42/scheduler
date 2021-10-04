@@ -24,6 +24,7 @@ function Form(props) {
             name="name"
             type="text"
             placeholder="Enter Student Name"
+            value={name}
             onChange={onInputChange}
           />
         </form>

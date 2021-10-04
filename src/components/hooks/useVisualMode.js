@@ -9,14 +9,14 @@ function useVisualMode(initial) {
 
   const transition = (newMode, replace = false) => {
     if (replace) {
-      setHistory([...history.slice(0, history.length - 1), newMode]);
+      setHistory((prev) => [...prev.slice(0, prev.length - 1), newMode]);
     } else {
-      setHistory([...history, newMode]);
+      setHistory((prev) => [...prev, newMode]);
     }
   };
   const back = () => {
     if (mode === initial) return;
-    setHistory(history.slice(0, history.length - 1));
+    setHistory((prev) => [...prev].slice(0, prev.length - 1));
   };
   return { mode, transition, back };
 }
