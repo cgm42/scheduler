@@ -19,6 +19,7 @@ function useApplicationData() {
           day: action.value,
         };
       case SET_APPLICATION_DATA:
+        console.log("state :>> ", state);
         console.log("{...state, ...action.value} :>> ", {
           ...state,
           ...action.value,
@@ -28,6 +29,7 @@ function useApplicationData() {
           ...action.value,
         };
       case SET_INTERVIEW:
+        console.log("state :>> ", state);
         return {
           ...state,
           days: action.value.days,
@@ -39,7 +41,6 @@ function useApplicationData() {
         );
     }
   }
-  //-------------------------
 
   const setDay = (day) => dispatch({ type: SET_DAY, value: day });
   useEffect(() => {
