@@ -89,7 +89,9 @@ function useApplicationData() {
     };
     return axios
       .put(`/api/appointments/${id}`, appointment)
-      .then((response) => {});
+      .then((response) => {
+        dispatch({ type: SET_INTERVIEW_ONE, id, interview });
+      });
   }
 
   function getSpotsForDay(state, appointments) {

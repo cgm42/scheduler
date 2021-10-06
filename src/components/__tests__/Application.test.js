@@ -42,7 +42,6 @@ describe("Application", () => {
     });
     fireEvent.click(getByAltText(appointment, "Sylvia Palmer"));
     fireEvent.click(getByText(appointment, "Save"));
-    // expect(appointment).toMatchSnapshot();
     console.log(prettyDOM(appointment));
 
     const saving = await waitForElement(() =>
@@ -55,8 +54,6 @@ describe("Application", () => {
       timeout: 500,
     });
 
-    expect(
-      queryByText(appointment, /Monday no spots remaining/i)
-    ).toBeInTheDocument();
+    expect(queryByText(container, /no spots remaining/i)).toBeInTheDocument();
   });
 });
