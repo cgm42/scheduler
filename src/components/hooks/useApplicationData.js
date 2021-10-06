@@ -1,10 +1,11 @@
-import { useEffect, useState, useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import axios from "axios";
 import { getAppointmentsForDay } from "helpers/selectors.js";
 function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
   const SET_INTERVIEW = "SET_INTERVIEW";
+  const SET_INTERVIEW_ONE = "SET_INTERVIEW_ONE";
   const [state, dispatch] = useReducer(reducer, {
     day: "Monday",
     days: [],
@@ -19,7 +20,6 @@ function useApplicationData() {
           day: action.value,
         };
       case SET_APPLICATION_DATA:
-        console.log("state :>> ", state);
         console.log("{...state, ...action.value} :>> ", {
           ...state,
           ...action.value,
@@ -28,13 +28,21 @@ function useApplicationData() {
           ...state,
           ...action.value,
         };
-      case SET_INTERVIEW:
-        console.log("state :>> ", state);
-        return {
-          ...state,
-          days: action.value.days,
-          appointments: action.value.appointments,
+      case SET_INTERVIEW_ONE:
+        const appointments = {
+          ...state.appointments,
+          [action.id]: {
+            ...state.appointments[action.id],
+            interview: action.interview,
+          },
         };
+        const days = updateSpotsInDays(state, appointments);
+        const newState = {
+          ...state,
+          days,
+          appointments,
+        };
+        return newState;
       default:
         throw new Error(
           `Tried to reduce with unsupported action type: ${action.type}`
@@ -58,6 +66,16 @@ function useApplicationData() {
         },
       });
     });
+    let socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
+
+    socket.onmessage = (event) => {
+      console.log(`message received: ${event.data}`);
+      var msg = JSON.parse(event.data);
+      dispatch(msg);
+    };
+    return () => {
+      socket.close();
+    };
   }, []);
 
   function bookInterview(id, interview) {
@@ -69,23 +87,12 @@ function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    console.log("state :>> ", state);
     return axios
       .put(`/api/appointments/${id}`, appointment)
-      .then((response) => {
-        const days = updateSpotsInDays(appointments);
-
-        dispatch({
-          type: SET_INTERVIEW,
-          value: {
-            appointments,
-            days,
-          },
-        });
-      });
+      .then((response) => {});
   }
 
-  function getSpotsForDay(appointments) {
+  function getSpotsForDay(state, appointments) {
     const apps = getAppointmentsForDay({ ...state, appointments }, state.day);
     let counter = 0;
     for (const eachApp in apps) {
@@ -94,8 +101,8 @@ function useApplicationData() {
     return counter;
   }
 
-  function updateSpotsInDays(appointments) {
-    const spot = getSpotsForDay(appointments);
+  function updateSpotsInDays(state, appointments) {
+    const spot = getSpotsForDay(state, appointments);
     const dayObj = state.days.find((dayObj) => dayObj.name === state.day);
     const newDay = { ...dayObj };
     newDay["spots"] = spot;
@@ -104,7 +111,6 @@ function useApplicationData() {
     );
     newDays.push(newDay);
     newDays.sort((a, b) => a.id - b.id);
-    console.log("newDays :>> ", newDays);
     return [...newDays];
   }
 
@@ -118,10 +124,7 @@ function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    return axios.delete(`/api/appointments/${id}`).then((response) => {
-      const days = updateSpotsInDays(appointments);
-      dispatch({ type: SET_INTERVIEW, value: { appointments, days } });
-    });
+    return axios.delete(`/api/appointments/${id}`);
   }
   return { state, setDay, bookInterview, cancelInterview };
 }

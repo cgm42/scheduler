@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import "./styles.scss";
 import Header from "./Header";
 import Show from "./Show";
@@ -8,6 +8,7 @@ import useVisualMode from "components/hooks/useVisualMode";
 import Status from "./Status";
 import Confirm from "./Confirm";
 import Error from "./Error";
+
 function Appointment(props) {
   const EMPTY = "EMPTY";
   const SHOW = "SHOW";
@@ -21,11 +22,23 @@ function Appointment(props) {
   const { mode, transition, back } = useVisualMode(
     props.interview ? SHOW : EMPTY
   );
+
+  useEffect(() => {
+    if (props.interview && mode === EMPTY) {
+      transition(SHOW);
+    }
+    if (props.interview === null && mode === SHOW) {
+      console.log("useEffect, interview= null, mode=show");
+      transition(EMPTY);
+    }
+  }, [props.interview, transition, mode]);
+
   const getInterviewerDetails = (interviewerId) => {
     return props.interviewers.find((interviewer) => {
       return interviewer.id === interviewerId;
     });
   };
+
   function save(name, interviewer) {
     const interview = {
       student: name,
@@ -37,24 +50,36 @@ function Appointment(props) {
       .then(() => {
         transition(SHOW);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error(error);
         transition(ERROR_SAVE, true);
       });
   }
+
   function deleteInterview() {
     transition(DELETING, true);
     props
       .cancelInterview(props.id)
       .then(() => {
+        console.log("transitioning to string :>> ");
         transition(EMPTY);
       })
-      .catch(() => {
+      .catch((e) => {
+        console.log("error :>> ", e);
+
         transition(ERROR_DELETE, true);
       });
   }
+
+  console.log({
+    mode,
+    props,
+  });
+
   return (
-    <article className="appointment">
+    <article className="appointment" data-testid="appointment">
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}
+
       {mode === CREATE && (
         <Form
           interviewers={props.interviewers}
@@ -67,7 +92,7 @@ function Appointment(props) {
       {mode === CONFIRM && (
         <Confirm onConfirm={deleteInterview} onCancel={back} />
       )}
-      {mode === EDIT && (
+      {mode === EDIT && props.interview && props.interview.interviewer && (
         <Form
           name={props.interview.student}
           interviewers={props.interviewers}
@@ -76,7 +101,7 @@ function Appointment(props) {
           onSave={(name, interviewer) => save(name, interviewer)}
         />
       )}
-      {mode === SHOW && (
+      {mode === SHOW && props.interview && props.interview.interviewer && (
         <Show
           student={props.interview.student}
           interviewer={getInterviewerDetails(props.interview.interviewer)}
