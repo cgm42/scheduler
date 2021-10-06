@@ -1,6 +1,5 @@
 import { useEffect, useReducer } from "react";
 import axios from "axios";
-import { getAppointmentsForDay } from "helpers/selectors.js";
 function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
@@ -29,6 +28,7 @@ function useApplicationData() {
           ...action.value,
         };
       case SET_INTERVIEW_ONE:
+        if (action.interview === undefined) action.interview = null;
         const appointments = {
           ...state.appointments,
           [action.id]: {
@@ -94,26 +94,26 @@ function useApplicationData() {
       });
   }
 
-  function getSpotsForDay(state, appointments) {
-    const apps = getAppointmentsForDay({ ...state, appointments }, state.day);
-    let counter = 0;
-    for (const eachApp in apps) {
-      if (apps[eachApp]["interview"] === null) counter++;
-    }
-    return counter;
-  }
-
   function updateSpotsInDays(state, appointments) {
-    const spot = getSpotsForDay(state, appointments);
-    const dayObj = state.days.find((dayObj) => dayObj.name === state.day);
-    const newDay = { ...dayObj };
-    newDay["spots"] = spot;
-    const newDays = [...state.days].filter(
-      (dayObj) => dayObj.name !== state.day
-    );
-    newDays.push(newDay);
+    let counter = 1;
+    let nullCounter = 0;
+    let newSpotsArr = [];
+    for (let appKey in appointments) {
+      let app = appointments[appKey];
+      counter++;
+      if (app.interview === null) nullCounter++;
+      if (counter % 5 === 0) {
+        newSpotsArr.push(nullCounter);
+        nullCounter = 0;
+      }
+    }
+    console.log("newSpotsArr :>> ", newSpotsArr);
+    const newDays = state.days.map((dayObj, index) => {
+      return { ...dayObj, spots: newSpotsArr[index] };
+    });
     newDays.sort((a, b) => a.id - b.id);
-    return [...newDays];
+    console.log("newDays :>> ", newDays);
+    return newDays;
   }
 
   function cancelInterview(id) {
@@ -126,9 +126,33 @@ function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    return axios.delete(`/api/appointments/${id}`);
+    return axios.delete(`/api/appointments/${id}`).then(() => {
+      dispatch({ type: SET_INTERVIEW_ONE, id });
+    });
   }
+
   return { state, setDay, bookInterview, cancelInterview };
+}
+
+export function updateSpotsInDays2(state, appointments) {
+  let counter = 1;
+  let nullCounter = 0;
+  let newSpotsArr = [];
+  for (let appKey in appointments) {
+    let app = appointments[appKey];
+    counter++;
+    if (app.interview === null) nullCounter++;
+    if (counter % 5 === 0) {
+      newSpotsArr.push(nullCounter);
+      nullCounter = 0;
+    }
+  }
+  console.log("newSpotsArr :>> ", newSpotsArr);
+  const newDays = state.days.map((dayObj, index) => {
+    return { ...dayObj, spots: newSpotsArr[index] };
+  });
+  newDays.sort((a, b) => a.id - b.id);
+  return newDays;
 }
 
 export default useApplicationData;
