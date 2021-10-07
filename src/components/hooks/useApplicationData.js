@@ -18,10 +18,6 @@ function useApplicationData() {
           day: action.value,
         };
       case SET_APPLICATION_DATA:
-        console.log({
-          ...state,
-          ...action.value,
-        });
         return {
           ...state,
           ...action.value,
@@ -68,7 +64,6 @@ function useApplicationData() {
     let socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
 
     socket.onmessage = (event) => {
-      console.log(`message received: ${event.data}`);
       var msg = JSON.parse(event.data);
       dispatch(msg);
     };
@@ -113,11 +108,6 @@ function useApplicationData() {
   }
 
   function cancelInterview(id) {
-    console.log(id);
-    const appointment = {
-      ...state.appointments[id],
-      interview: null,
-    };
     return axios.delete(`/api/appointments/${id}`).then(() => {
       dispatch({ type: SET_INTERVIEW_ONE, id });
     });
