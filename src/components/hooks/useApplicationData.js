@@ -3,7 +3,6 @@ import axios from "axios";
 function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
-  const SET_INTERVIEW = "SET_INTERVIEW";
   const SET_INTERVIEW_ONE = "SET_INTERVIEW_ONE";
   const [state, dispatch] = useReducer(reducer, {
     day: "Monday",
@@ -19,7 +18,7 @@ function useApplicationData() {
           day: action.value,
         };
       case SET_APPLICATION_DATA:
-        console.log("{...state, ...action.value} :>> ", {
+        console.log({
           ...state,
           ...action.value,
         });
@@ -83,10 +82,6 @@ function useApplicationData() {
       ...state.appointments[id],
       interview: { ...interview },
     };
-    const appointments = {
-      ...state.appointments,
-      [id]: appointment,
-    };
     return axios
       .put(`/api/appointments/${id}`, appointment)
       .then((response) => {
@@ -95,25 +90,26 @@ function useApplicationData() {
   }
 
   function updateSpotsInDays(state, appointments) {
-    let counter = 1;
+    let counter = 0;
     let nullCounter = 0;
     let newSpotsArr = [];
     for (let appKey in appointments) {
       let app = appointments[appKey];
-      counter++;
-      if (app.interview === null) nullCounter++;
-      if (counter % 5 === 0) {
+      if (state.days[counter].appointments.indexOf(app.id) !== -1) {
+        if (app.interview === null) nullCounter++;
+      } else {
         newSpotsArr.push(nullCounter);
         nullCounter = 0;
+        if (app.interview === null) nullCounter++;
+        counter++;
       }
     }
-    console.log("newSpotsArr :>> ", newSpotsArr);
+    newSpotsArr.push(nullCounter);
     const newDays = state.days.map((dayObj, index) => {
       return { ...dayObj, spots: newSpotsArr[index] };
     });
     newDays.sort((a, b) => a.id - b.id);
-    console.log("newDays :>> ", newDays);
-    return newDays;
+    return [...newDays];
   }
 
   function cancelInterview(id) {
@@ -121,10 +117,6 @@ function useApplicationData() {
     const appointment = {
       ...state.appointments[id],
       interview: null,
-    };
-    const appointments = {
-      ...state.appointments,
-      [id]: appointment,
     };
     return axios.delete(`/api/appointments/${id}`).then(() => {
       dispatch({ type: SET_INTERVIEW_ONE, id });
@@ -147,7 +139,6 @@ export function updateSpotsInDays2(state, appointments) {
       nullCounter = 0;
     }
   }
-  console.log("newSpotsArr :>> ", newSpotsArr);
   const newDays = state.days.map((dayObj, index) => {
     return { ...dayObj, spots: newSpotsArr[index] };
   });

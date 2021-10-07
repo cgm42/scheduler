@@ -71,11 +71,6 @@ function Appointment(props) {
       });
   }
 
-  console.log({
-    mode,
-    props,
-  });
-
   return (
     <article className="appointment" data-testid="appointment">
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}
