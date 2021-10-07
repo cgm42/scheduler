@@ -28,7 +28,6 @@ function Appointment(props) {
       transition(SHOW);
     }
     if (props.interview === null && mode === SHOW) {
-      console.log("useEffect, interview= null, mode=show");
       transition(EMPTY);
     }
   }, [props.interview, transition, mode]);
@@ -61,12 +60,9 @@ function Appointment(props) {
     props
       .cancelInterview(props.id)
       .then(() => {
-        console.log("transitioning to string :>> ");
         transition(EMPTY);
       })
       .catch((e) => {
-        console.log("error :>> ", e);
-
         transition(ERROR_DELETE, true);
       });
   }
