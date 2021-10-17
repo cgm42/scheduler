@@ -3,7 +3,7 @@ import axios from "axios";
 function useApplicationData() {
   const SET_DAY = "SET_DAY";
   const SET_APPLICATION_DATA = "SET_APPLICATION_DATA";
-  const SET_INTERVIEW_ONE = "SET_INTERVIEW_ONE";
+  const SET_INTERVIEW = "SET_INTERVIEW";
   const [state, dispatch] = useReducer(reducer, {
     day: "Monday",
     days: [],
@@ -22,7 +22,7 @@ function useApplicationData() {
           ...state,
           ...action.value,
         };
-      case SET_INTERVIEW_ONE:
+      case SET_INTERVIEW:
         if (action.interview === undefined) action.interview = null;
         const appointments = {
           ...state.appointments,
@@ -80,7 +80,7 @@ function useApplicationData() {
     return axios
       .put(`/api/appointments/${id}`, appointment)
       .then((response) => {
-        dispatch({ type: SET_INTERVIEW_ONE, id, interview });
+        dispatch({ type: SET_INTERVIEW, id, interview });
       });
   }
 
@@ -109,7 +109,7 @@ function useApplicationData() {
 
   function cancelInterview(id) {
     return axios.delete(`/api/appointments/${id}`).then(() => {
-      dispatch({ type: SET_INTERVIEW_ONE, id });
+      dispatch({ type: SET_INTERVIEW, id });
     });
   }
 
